@@ -23,7 +23,6 @@ const pool = new Pool({
 });
 
 app.get("/authStatus", authMiddleware, (req, res) => {
-  console.log("authStatus")
   res.json({ message: "Authenticated" });
 });
 
@@ -31,7 +30,6 @@ app.post("/login", [
   body("email").isEmail(),
   body("password").notEmpty()
 ], async (req, res) => {
-  console.log("login")
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -58,7 +56,6 @@ app.post('/register', [
     .withMessage("Password must be at least 6 characters"),
 ],
   async (req, res) => {
-    console.log("register")
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -89,7 +86,6 @@ app.post('/register', [
   });
 
 app.post('/logout', authMiddleware, (req, res) => {
-  console.log("logout")
   res.clearCookie("token", {
     httpOnly: true,
     secure: false,
@@ -99,9 +95,7 @@ app.post('/logout', authMiddleware, (req, res) => {
 });
 
 app.get('/user_data', authMiddleware, async (req, res) => {
-  console.log("get user_data")
   const user_id = req.user.id
-  console.log(user_id)
   const data = await pool.query(`
     SELECT link_data
     FROM user_data
@@ -109,16 +103,12 @@ app.get('/user_data', authMiddleware, async (req, res) => {
     WHERE user_data.id = $1;
   `, [user_id]);
 
-  console.log(data.rows)
-
   res.json(data.rows);
 });
 
 app.post('/user_data', authMiddleware, async (req, res) => {
-  console.log("post user_data")
   const user_id = req.user.id;
   const linkGroupInfo = req.body.linkGroupInfo;
-  console.log("Setting user data for user_id: ", linkGroupInfo);
   try {
     await pool.query(`
       INSERT INTO user_data (id, link_data)
@@ -130,6 +120,20 @@ app.post('/user_data', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/user_email', authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const result = await pool.query("SELECT email FROM users WHERE id = $1", [userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ email: result.rows[0].email });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
