@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 
 // TODO does this log you out in an hour?
 const generateToken = (user) => {
-    return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "6m" });
 };
 
 const verifyToken = (token) => {
