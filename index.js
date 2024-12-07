@@ -11,7 +11,7 @@ const cookieParser = require('cookie-parser');
 const isProduction = process.env.IS_PRODUCTION === 'true';
 
 const corsOptions = {
-  origin: 'https://link-cache.vercel.app/',
+  origin: process.env.CORS_ORIGIN,
   credentials: true,
 };
 
