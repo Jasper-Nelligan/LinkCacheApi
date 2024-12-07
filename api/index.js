@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser');
 
 const isProduction = process.env.IS_PRODUCTION === 'true';
 
+
 const corsOptions = {
   origin: process.env.CORS_ORIGIN,
   credentials: true,
@@ -18,6 +19,7 @@ const corsOptions = {
 };
 
 const app = express();
+app.options('*', cors(corsOptions)); // Handle preflight requests globally
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors(corsOptions));
