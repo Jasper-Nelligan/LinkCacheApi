@@ -10,15 +10,24 @@ const cookieParser = require('cookie-parser');
 
 const isProduction = process.env.IS_PRODUCTION === 'true';
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the Link Cache API');
+});
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN,
+  origin: "https://link-cache.vercel.app/",
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["X-CSRF-Token", "X-Requested-With", "Accept", "Content-Type", "Authorization"],
 };
 
 const app = express();
+app.use(cors(corsOptions));
+app.options('*', (req, res) => {
+  res.status(200).send();
+});
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors(corsOptions));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -147,4 +156,6 @@ app.get('/user_email', authMiddleware, async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('Server is running on port 3000'));
+const port = process.env.PORT || 3000;
+
+app.listen(port, () => console.log('Server is running on port ' + port));
