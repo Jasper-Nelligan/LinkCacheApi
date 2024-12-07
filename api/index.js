@@ -3,9 +3,9 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const { body, validationResult } = require("express-validator");
-const authMiddleware = require('./authMiddleware');
+const authMiddleware = require('../authMiddleware');
 const bcrypt = require("bcryptjs");
-const { generateToken } = require("./utilities");
+const { generateToken } = require("../utilities");
 const cookieParser = require('cookie-parser');
 
 const isProduction = process.env.IS_PRODUCTION === 'true';
