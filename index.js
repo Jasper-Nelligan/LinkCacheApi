@@ -8,6 +8,8 @@ const bcrypt = require("bcryptjs");
 const { generateToken } = require("./utilities");
 const cookieParser = require('cookie-parser');
 
+const isProduction = process.env.IS_PRODUCTION === 'true';
+
 const corsOptions = {
   origin: 'http://localhost:5173',
   credentials: true,
@@ -20,6 +22,9 @@ app.use(cors(corsOptions));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: isProduction,
+  },
 });
 
 app.get("/authStatus", authMiddleware, (req, res) => {
@@ -36,14 +41,18 @@ app.post("/login", [
   const { email, password } = req.body;
   try {
     const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+
     const isMatch = await bcrypt.compare(password, user.rows[0].password);
+
     if (!user.rows.length || !isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
     const token = generateToken(user.rows[0]);
 
     // Send JWT as an HTTP-only cookie
-    res.cookie("token", token, { httpOnly: true, maxAge: 365 * 24 * 60 * 60 * 1000, secure: false });
+    res.cookie("token", token, { httpOnly: true, maxAge: 365 * 24 * 60 * 60 * 1000, secure: isProduction });
+
     res.json({ message: "Logged in successfully" });
+
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -56,6 +65,7 @@ app.post('/register', [
     .withMessage("Password must be at least 6 characters"),
 ],
   async (req, res) => {
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -78,7 +88,7 @@ app.post('/register', [
       const token = generateToken(newUser.rows[0]);
 
       // Send JWT as an HTTP-only cookie
-      res.cookie("token", token, { httpOnly: true, maxAge: 365 * 24 * 60 * 60 * 1000, secure: false }); // TODO change to true for production
+      res.cookie("token", token, { httpOnly: true, maxAge: 365 * 24 * 60 * 60 * 1000, secure: isProduction });
       res.status(201).json({ message: "Account created successfully" });
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
@@ -88,7 +98,7 @@ app.post('/register', [
 app.post('/logout', authMiddleware, (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: false,
+    secure: isProduction,
     path: "/",
   });
   res.json({ message: "Logged out successfully" });
