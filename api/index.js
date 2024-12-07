@@ -19,10 +19,10 @@ const corsOptions = {
 };
 
 const app = express();
+app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Handle preflight requests globally
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors(corsOptions));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
