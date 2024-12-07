@@ -20,7 +20,9 @@ const corsOptions = {
 
 const app = express();
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle preflight requests globally
+app.options('*', (req, res) => {
+  res.status(200).send();
+});
 app.use(express.json());
 app.use(cookieParser());
 
